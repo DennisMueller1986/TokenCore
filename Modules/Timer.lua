@@ -1,15 +1,13 @@
 local addonName, TC = ...
 
--- Wir initialisieren currentTime erst später (via RestoreTimer)
 local currentTime = nil 
 local timerFrame = CreateFrame("Frame")
-local lastBeat = 0 -- WICHTIG: Muss außerhalb der OnUpdate Funktion sein!
+local lastBeat = 0
 
 -- ============================================================
--- HILFSFUNKTIONEN
+-- HELPERS
 -- ============================================================
 
--- Funktion: Timer beim Login wiederherstellen
 function TC.RestoreTimer()
     if TokenCoreDB.remainingTime then
         currentTime = TokenCoreDB.remainingTime
@@ -19,7 +17,6 @@ function TC.RestoreTimer()
     end
 end
 
--- Funktion: Timer zurücksetzen (z.B. bei XP Gewinn)
 function TC.ResetTimer()
     local duration = TokenCoreDB.timerDuration or 300
     currentTime = duration
@@ -27,7 +24,6 @@ function TC.ResetTimer()
     TC.UpdateTimerText(TC.FormatTime(currentTime), 1, 1, 1)
 end
 
--- Funktion für das Debug-Panel
 function TC.SetTimerVal(seconds)
     currentTime = seconds
     TokenCoreDB.remainingTime = currentTime
@@ -35,7 +31,6 @@ function TC.SetTimerVal(seconds)
     TC.Print("Debug: Timer manuell gesetzt auf " .. seconds .. "s")
 end
 
--- Hilfsfunktion: Sekunden in "MM:SS" umwandeln
 function TC.FormatTime(seconds)
     if not seconds then return "00:00" end
     local m = math.floor(seconds / 60)
@@ -44,7 +39,7 @@ function TC.FormatTime(seconds)
 end
 
 -- ============================================================
--- DER TIMER LOOP (HERZSCHLAG)
+-- TIMER LOOP
 -- ============================================================
 
 timerFrame:SetScript("OnUpdate", function(self, elapsed)
@@ -53,35 +48,31 @@ timerFrame:SetScript("OnUpdate", function(self, elapsed)
     -- 1. GAME OVER CHECK
     if TokenCoreDB.isDead then
         TC.UpdateTimerText("YOU'VE DIED", 1, 0, 0)
-        TC.UpdateCurseText(nil) -- Curse Text ausblenden
+        TC.UpdateCurseText(nil)
         return
     end
 
     -- 2. CURSE INFO UPDATE
-    -- Wir berechnen das IMMER, wenn Decay aktiv ist, egal ob Timer läuft oder nicht.
     if TokenCoreDB.decayEnabled then
         local currentLvl = UnitLevel("player")
         local remainder = currentLvl % 10
         local levelsLeft = 10 - remainder
         
-        -- Farbe: Lila (0.8, 0.4, 1) oder Rot (1, 0.2, 0.2) wenn es knapp wird (1 Level left)
         local r, g, b = 0.8, 0.4, 1
         if levelsLeft <= 1 then r, g, b = 1, 0.2, 0.2 end
         
         TC.UpdateCurseText("Curse in: " .. levelsLeft .. " Lvl", r, g, b)
     else
-        TC.UpdateCurseText(nil) -- Ausblenden, wenn Decay aus ist
+        TC.UpdateCurseText(nil)
     end
 
     -- 3. TIMER INFO UPDATE
     
-    -- Fall A: Timer ist komplett aus
     if TokenCoreDB.timerEnabled == false then
-        TC.UpdateTimerText("") -- Leer lassen (Platz bleibt frei oder Fenster sieht leerer aus)
+        TC.UpdateTimerText("")
         return
     end
 
-    -- Fall B: Timer läuft
     if currentTime == nil then
         TC.RestoreTimer()
         return
@@ -93,11 +84,9 @@ timerFrame:SetScript("OnUpdate", function(self, elapsed)
         return 
     end
 
-    -- Zeit berechnen
     currentTime = currentTime - elapsed
     TokenCoreDB.remainingTime = currentTime
 
-    -- Anzeige
     if currentTime <= 10 then
         TC.UpdateTimerText(TC.FormatTime(currentTime), 1, 0, 0)
         
@@ -111,7 +100,6 @@ timerFrame:SetScript("OnUpdate", function(self, elapsed)
         TC.UpdateTimerText(TC.FormatTime(currentTime), 1, 1, 1)
     end
 
-    -- Ablauf
     if currentTime <= 0 then
         TC.ShowNotification("TIME'S UP!", "The adrenaline stops your heart.", "Interface\\Icons\\Spell_Holy_BorrowedTime", 8959)
         TC.RemoveToken()

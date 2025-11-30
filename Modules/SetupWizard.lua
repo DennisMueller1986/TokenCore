@@ -45,13 +45,11 @@ function TC.ShowSetupWizard()
     text1:SetText("STEP 1: Choose Your Destiny")
     text1:SetTextColor(COLOR_CREAM.r, COLOR_CREAM.g, COLOR_CREAM.b)
 
-    -- FIX: Hintergrund (schwarze Box) entfernt!
     local function CreateModeIcon(parent, texturePath, xOffset)
         local icon = parent:CreateTexture(nil, "ARTWORK")
         icon:SetSize(90, 90) -- Ein bisschen größer, da der Rahmen weg ist
         icon:SetPoint("CENTER", frame, "CENTER", xOffset, 60)
         icon:SetTexture(texturePath)
-        -- Leichter Glow, damit sie sich vom dunklen Hintergrund abheben
         icon:SetVertexColor(1, 1, 1) 
         return icon
     end
@@ -69,12 +67,10 @@ function TC.ShowSetupWizard()
     end
 
     -- ADRENALINE
-    -- Wir bekommen nur noch das Icon zurück (kein bgAdrenalin mehr)
     local iconAdrenalin = CreateModeIcon(step1, mediaPath .. "mode_adrenaline.png", -200)
     
     local btnAdrenalin = CreateFrame("Button", nil, step1, "GameMenuButtonTemplate")
     btnAdrenalin:SetSize(150, 35)
-    -- FIX: Wir verankern den Button jetzt direkt am Icon
     btnAdrenalin:SetPoint("TOP", iconAdrenalin, "BOTTOM", 0, -20) 
     btnAdrenalin:SetText("Adrenaline Mode")
     btnAdrenalin:GetFontString():SetTextColor(COLOR_GOLD.r, COLOR_GOLD.g, COLOR_GOLD.b)
@@ -150,7 +146,7 @@ function TC.ShowSetupWizard()
         _G[self:GetName() .. "Text"]:SetText("Starting Tokens: " .. math.floor(value))
     end)
 
-    -- TRENNLINIE 1
+    -- DIVIDER 1
     local divider1 = step2:CreateTexture(nil, "ARTWORK")
     divider1:SetSize(450, 2)
     divider1:SetPoint("TOP", tokenSlider, "BOTTOM", 0, -50) 
@@ -160,12 +156,10 @@ function TC.ShowSetupWizard()
     local cbRegen = CreateFrame("CheckButton", nil, step2, "ChatConfigCheckButtonTemplate")
     cbRegen:SetPoint("TOPLEFT", tokenSlider, "BOTTOMLEFT", -15, -70) 
     
-    -- ÄNDERUNG: Neuer Text & Standardwert
     cbRegen.Text:SetText(" Allow Token Rewards (Achievements)") 
     cbRegen.Text:SetTextColor(COLOR_WHITE.r, COLOR_WHITE.g, COLOR_WHITE.b)
-    cbRegen:SetChecked(false) -- Standardmäßig AUS
+    cbRegen:SetChecked(false)
     
-    -- ÄNDERUNG: Tooltip angepasst
     AddTooltip(cbRegen, "Achievement Rewards", "If enabled, you can regain lost tokens by unlocking Achievements (Killing Bosses, Quests, Leveling).")
 
     local cbDecay = CreateFrame("CheckButton", nil, step2, "ChatConfigCheckButtonTemplate")
@@ -173,7 +167,7 @@ function TC.ShowSetupWizard()
     cbDecay.Text:SetText(" Level Decay (Lose Token every 10 Lvl)")
     AddTooltip(cbDecay, "Level Decay", "|cffFF0000WARNING:|r Lose a token automatically at level 10, 20, 30...")
     
-    -- TRENNLINIE 2
+    -- DIVIDER 2
     local divider2 = step2:CreateTexture(nil, "ARTWORK")
     divider2:SetSize(450, 2)
     divider2:SetPoint("TOP", divider1, "BOTTOM", 0, -80) 
@@ -211,10 +205,9 @@ function TC.ShowSetupWizard()
 
     -- 5. SLIDER: PEASANT MODE (ITEM QUALITY)
     local qualSlider = CreateFrame("Slider", "TCQualSlider", step2, "OptionsSliderTemplate")
-    -- Positioniere ihn unter dem TimeSlider (pass ggf. die Y-Koordinate -70 an, wenn es eng wird)
     qualSlider:SetPoint("TOP", timeSlider, "BOTTOM", 0, -50) 
-    qualSlider:SetMinMaxValues(0, 4) -- 0: Grau, 1: Weiß, 2: Grün, 3: Blau, 4: Lila
-    qualSlider:SetValue(4) -- Standard: Lila (also alles erlaubt)
+    qualSlider:SetMinMaxValues(0, 4) -- 0: Grey, 1: White, 2: Green, 3: Blue, 4: Purple
+    qualSlider:SetValue(4)
     qualSlider:SetValueStep(1)
     qualSlider:SetObeyStepOnDrag(true)
     qualSlider:SetWidth(220)
@@ -230,8 +223,6 @@ function TC.ShowSetupWizard()
     _G[qualSlider:GetName() .. "Low"]:SetText("")
     _G[qualSlider:GetName() .. "High"]:SetText("")
     _G[qualSlider:GetName() .. "Text"]:SetText("Max Quality: " .. qNames[4])
-    
-    -- Design anpassen
     _G[qualSlider:GetName() .. "Text"]:SetTextColor(COLOR_GOLD.r, COLOR_GOLD.g, COLOR_GOLD.b)
     
     AddTooltip(qualSlider, "Peasant Limit", "The highest item quality you are allowed to equip.\nEquipping anything better costs a token!")
@@ -274,11 +265,6 @@ function TC.ShowSetupWizard()
         if TC.ResetTimer then TC.ResetTimer() end
         frame:Hide()
     end)
-
-    -- MODI LOGIK
-    -- Hinweis: Adrenaline und Cursed setzen den Haken automatisch auf TRUE,
-    -- da diese Modi ohne Rewards zu hart wären.
-    -- Im Custom Mode muss der User es jetzt selbst aktivieren.
 
     -- ============================================================
     -- LOGIC & BUTTON HANDLERS

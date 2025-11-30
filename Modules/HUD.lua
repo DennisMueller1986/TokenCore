@@ -17,7 +17,7 @@ function TC.UpdateHUD()
     local isDead = TokenCoreDB.isDead
 
     -- ============================================================
-    -- 1. HEADER LOGIK (LEBEND vs TOT)
+    -- 1. HEADER LOGIC (ALIVE vs DEAD)
     -- ============================================================
     if isDead then
         hudFrame.header:SetText("GAME OVER")
@@ -29,7 +29,7 @@ function TC.UpdateHUD()
     end
 
     -- ============================================================
-    -- 2. ICONS (Fest unter Header)
+    -- 2. ICONS
     -- ============================================================
     local iconSize = 26
     local spacing = 4
@@ -47,7 +47,6 @@ function TC.UpdateHUD()
         tokenTextures[i]:ClearAllPoints()
         tokenTextures[i]:SetPoint("TOP", hudFrame, "TOP", xPos, -26) 
 
-        -- Wenn tot, sind alle Tokens inaktiv (da current = 0)
         if i <= current then
             tokenTextures[i]:SetTexture("Interface\\AddOns\\TokenCore\\Media\\token_active.png")
             tokenTextures[i]:SetDesaturated(false); tokenTextures[i]:SetAlpha(1)
@@ -60,23 +59,20 @@ function TC.UpdateHUD()
     
     for i = max + 1, #tokenTextures do tokenTextures[i]:Hide() end
     
-    -- Mindestbreite
     local neededWidth = math.max(170, totalWidth + 40)
     hudFrame:SetWidth(neededWidth)
 
     -- ============================================================
-    -- 3. TEXT STATUS (DYNAMISCH)
+    -- 3. TEXT STATE (DYNAMIC)
     -- ============================================================
     
     local currentY = -60 
     local spacingY = 2 
     
-    -- GAME OVER ZUSTAND
+    -- GAME OVER
     if isDead then
-        -- Curse ausblenden
         hudFrame.curseText:Hide()
         
-        -- Timer Text missbrauchen für "Final Level"
         hudFrame.timerText:ClearAllPoints()
         hudFrame.timerText:SetPoint("TOP", hudFrame, "TOP", 0, currentY)
         hudFrame.timerText:SetText("Final Level: " .. level)
@@ -86,7 +82,7 @@ function TC.UpdateHUD()
         currentY = currentY - 18 - spacingY
         
     else
-        -- NORMALER ZUSTAND (LEBEND)
+        -- ALIVE
         
         -- A) CURSE TEXT
         if TokenCoreDB.decayEnabled then
@@ -109,7 +105,6 @@ function TC.UpdateHUD()
         end
     end
     
-    -- C) HÖHE ANPASSEN
     local finalHeight = math.abs(currentY) + 5
     if finalHeight < 65 then finalHeight = 65 end
     
@@ -117,7 +112,6 @@ function TC.UpdateHUD()
 end
 
 function TC.UpdateTimerText(text, r, g, b)
-    -- Wenn wir tot sind, darf der Timer nicht mehr dazwischenfunken!
     if TokenCoreDB.isDead then return end
 
     if hudFrame and hudFrame.timerText then
