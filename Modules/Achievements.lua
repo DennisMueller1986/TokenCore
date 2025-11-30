@@ -36,14 +36,15 @@ local function IsEligible(ach)
     return true
 end
 
+-- DEINE NEUE REGEL:
 local function IsMobRelevant(mobLevel)
     local playerLevel = UnitLevel("player")
+    -- Boss (-1) ist immer okay
     if mobLevel == -1 then return true end 
-    local grayLimit
-    if playerLevel <= 5 then grayLimit = 0
-    elseif playerLevel <= 39 then grayLimit = playerLevel - (math.floor(playerLevel / 10) + 5)
-    else grayLimit = playerLevel - (math.floor(playerLevel / 5) + 1) end
-    return mobLevel > grayLimit
+    
+    -- Nur Mobs, die gleich stark oder stärker sind
+    local minLevel = playerLevel 
+    return mobLevel >= minLevel
 end
 
 local function GrantAchievement(ach)
@@ -65,7 +66,6 @@ local function GrantAchievement(ach)
         PlaySound(12892); TC.Print("|cffFFD700ACHIEVEMENT: " .. ach.title .. "!|r")
     end
 
-    -- LOGIK: Token nur geben, wenn es erlaubt ist UND nicht auf der Blacklist steht
     local rewardsAllowed = TokenCoreDB.regenEnabled
     local isBlacklisted = NO_TOKEN_REWARD[ach.achId]
 
@@ -78,13 +78,17 @@ local function GrantAchievement(ach)
     if TC.RefreshAchievementWindow then TC.RefreshAchievementWindow() end
 end
 
--- Event Checker
+-- Event Checker (Mit Fix für tonumber/select Fehler)
 function TC.CheckAchievementKill(destGUID)
     if not destGUID or not TC.AchievementsDB then return end
-    local npcID = tonumber(select(6, strsplit("-", destGUID)))
+    
+    -- Fix für den Select-Bug
+    local npcID = tonumber((select(6, strsplit("-", destGUID)))) 
     if not npcID then return end
     
     local mobName, mobLevel, mobType = UnitName("target"), UnitLevel("target"), UnitCreatureType("target")
+    
+    -- Fallback auf Mouseover, wenn Target nicht passt
     if UnitGUID("target") ~= destGUID then 
         if UnitGUID("mouseover") == destGUID then
             mobName, mobLevel, mobType = UnitName("mouseover"), UnitLevel("mouseover"), UnitCreatureType("mouseover")
@@ -138,9 +142,6 @@ local tabs = {}
 local function SelectTab(id)
     PanelTemplates_SetTab(achWindow, id)
     currentCategory = TAB_MAPPING[id].key
-    
-    -- Subtitle wird jetzt in RefreshAchievementWindow gesetzt, 
-    -- damit der Count immer aktuell ist.
     TC.RefreshAchievementWindow()
 end
 
@@ -159,9 +160,8 @@ local function CreateAchWindow()
     achWindow:SetScript("OnDragStop", achWindow.StopMovingOrSizing)
     achWindow:Hide()
 
-    -- 2. TEXTUREN (Character Frame Style)
+    -- 2. TEXTUREN
     local texPath = "Interface\\PaperDollInfoFrame\\UI-Character-General-"
-    
     local tl = achWindow:CreateTexture(nil, "BORDER"); tl:SetSize(256, 256); tl:SetPoint("TOPLEFT", 0, 0); tl:SetTexture(texPath.."TopLeft")
     local tr = achWindow:CreateTexture(nil, "BORDER"); tr:SetSize(128, 256); tr:SetPoint("TOPRIGHT", 0, 0); tr:SetTexture(texPath.."TopRight")
     local bl = achWindow:CreateTexture(nil, "BORDER"); bl:SetSize(256, 256); bl:SetPoint("BOTTOMLEFT", 0, 0); bl:SetTexture(texPath.."BottomLeft")
@@ -179,12 +179,11 @@ local function CreateAchWindow()
     mask:SetPoint("TOPLEFT", 7, -6)
     portrait:AddMaskTexture(mask)
 
-    -- 4. HAUPT-TITEL (Oben im Metall-Balken)
+    -- 4. TITEL
     achWindow.title = achWindow:CreateFontString(nil, "OVERLAY", "GameFontNormal")
     achWindow.title:SetPoint("TOP", achWindow, "TOP", 0, -18) 
     achWindow.title:SetText("Achievements")
 
-    -- 5. SUB-TITEL (Der Tab Name)
     achWindow.subtitle = achWindow:CreateFontString(nil, "OVERLAY", "GameFontNormal")
     achWindow.subtitle:SetPoint("TOP", achWindow, "TOP", 0, -53) 
     achWindow.subtitle:SetText("Targets") 
@@ -211,22 +210,15 @@ local function CreateAchWindow()
         local tab = CreateFrame("Button", "$parentTab"..i, achWindow, "CharacterFrameTabButtonTemplate")
         tab:SetID(i)
         tab:SetText(data.text)
-        
         if i == 1 then
             tab:SetPoint("TOPLEFT", achWindow, "BOTTOMLEFT", 15, 75)
         else
             tab:SetPoint("TOPLEFT", achWindow.Tabs[i-1], "TOPRIGHT", -16, 0)
         end
-        
-        tab:SetScript("OnClick", function()
-            SelectTab(i)
-            PlaySound(841)
-        end)
-        
+        tab:SetScript("OnClick", function() SelectTab(i); PlaySound(841) end)
         PanelTemplates_TabResize(tab, 0)
         achWindow.Tabs[i] = tab
     end
-    
     SelectTab(1)
 end
 
@@ -276,8 +268,8 @@ function TC.RefreshAchievementWindow()
         line:SetWidth(290)
         line:SetJustifyH("LEFT")
         
+        -- Icons & Status Text
         local iconStr = "|T" .. (ach.icon or 134400) .. ":16|t"
-        
         local extraInfo = ""
         if ach.type == "SLAYER" and status ~= true then
             local current = progressDB[ach.achId] or 0
@@ -286,10 +278,7 @@ function TC.RefreshAchievementWindow()
             extraInfo = " |cffbbbbbb(Limit: " .. ach.levelCap .. ")|r"
         end
 
-        local showRewardIcon = false
-        if rewardsEnabled and not NO_TOKEN_REWARD[ach.achId] then
-            showRewardIcon = true
-        end
+        local showRewardIcon = (rewardsEnabled and not NO_TOKEN_REWARD[ach.achId])
 
         if status == true then
             line:SetText(iconStr .. " |cff00FF00" .. ach.title .. "|r")
@@ -303,6 +292,34 @@ function TC.RefreshAchievementWindow()
             end
         end
         
+        -- ==========================================================
+        -- NEU: TOOLTIP FÜR SLAYER REGELN AUF DEM TITEL
+        -- ==========================================================
+        -- Wir legen einen unsichtbaren Button über den Titel, um Tooltips anzuzeigen
+        local hitBox = CreateFrame("Button", nil, scrollChild)
+        -- Wir verankern ihn über dem Text
+        hitBox:SetAllPoints(line)
+        
+        hitBox:SetScript("OnEnter", function(self)
+            GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
+            GameTooltip:SetText(ach.title, 1, 0.82, 0)
+            GameTooltip:AddLine(ach.description, 1, 1, 1, true)
+            
+            -- HIER IST DIE ERKLÄRUNG:
+            if ach.type == "SLAYER" then
+                GameTooltip:AddLine(" ")
+                GameTooltip:AddLine("Slayer Rule:", 1, 0.5, 0.5)
+                GameTooltip:AddLine("- Target must be your level or higher.", 1, 0.2, 0.2)
+                GameTooltip:AddLine("- Current Requirement: Lvl " .. playerLevel .. "+", 0.6, 0.6, 0.6)
+            end
+            
+            GameTooltip:Show()
+        end)
+        hitBox:SetScript("OnLeave", function() GameTooltip:Hide() end)
+        
+        -- ==========================================================
+        -- REWARD ICON (Button rechts daneben)
+        -- ==========================================================
         if showRewardIcon then
             local btn = CreateFrame("Button", nil, scrollChild)
             btn:SetSize(16, 16)
@@ -321,6 +338,7 @@ function TC.RefreshAchievementWindow()
             btn:SetScript("OnLeave", function() GameTooltip:Hide() end)
         end
         
+        -- DESCRIPTION (Statisch darunter)
         local desc = scrollChild:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
         desc:SetPoint("TOPLEFT", 25, yOffset - 15)
         desc:SetWidth(270)
@@ -331,19 +349,12 @@ function TC.RefreshAchievementWindow()
         yOffset = yOffset - 40
     end
     
-    -- UPDATE TITLES
-    -- 1. Main Title Reset
+    -- Subtitle Update
     achWindow.title:SetText("Achievements")
-    
-    -- 2. Subtitle (Category Name + Count)
     local categoryName = "Unknown"
     for _, data in ipairs(TAB_MAPPING) do
-        if data.key == currentCategory then
-            categoryName = data.text
-            break
-        end
+        if data.key == currentCategory then categoryName = data.text break end
     end
-    
     achWindow.subtitle:SetText(categoryName .. " (" .. countDone .. "/" .. countTotal .. ")")
     
     scrollChild:SetHeight(math.abs(yOffset) + 20)

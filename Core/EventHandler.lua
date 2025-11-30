@@ -7,8 +7,7 @@ eventFrame:RegisterEvent("PLAYER_DEAD")
 eventFrame:RegisterEvent("PLAYER_XP_UPDATE")
 eventFrame:RegisterEvent("PLAYER_LEVEL_UP")
 eventFrame:RegisterEvent("QUEST_TURNED_IN")
-
--- NEUE EVENTS FÜR TITAN RULE:
+eventFrame:RegisterEvent("PLAYER_EQUIPMENT_CHANGED")
 eventFrame:RegisterEvent("PLAYER_TARGET_CHANGED")
 eventFrame:RegisterEvent("UPDATE_MOUSEOVER_UNIT")
 eventFrame:RegisterEvent("COMBAT_LOG_EVENT_UNFILTERED")
@@ -47,6 +46,10 @@ eventFrame:SetScript("OnEvent", function(self, event, arg1)
                 TC.ResetTimer() 
             end
         end
+    end
+
+    if event == "PLAYER_EQUIPMENT_CHANGED" then
+        if TC.CheckEquipment then TC.CheckEquipment() end
     end
 
     -- ============================================================

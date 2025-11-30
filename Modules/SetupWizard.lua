@@ -209,6 +209,38 @@ function TC.ShowSetupWizard()
         if self:GetChecked() then timeSlider:Show() else timeSlider:Hide() end
     end)
 
+    -- 5. SLIDER: PEASANT MODE (ITEM QUALITY)
+    local qualSlider = CreateFrame("Slider", "TCQualSlider", step2, "OptionsSliderTemplate")
+    -- Positioniere ihn unter dem TimeSlider (pass ggf. die Y-Koordinate -70 an, wenn es eng wird)
+    qualSlider:SetPoint("TOP", timeSlider, "BOTTOM", 0, -50) 
+    qualSlider:SetMinMaxValues(0, 4) -- 0: Grau, 1: Weiß, 2: Grün, 3: Blau, 4: Lila
+    qualSlider:SetValue(4) -- Standard: Lila (also alles erlaubt)
+    qualSlider:SetValueStep(1)
+    qualSlider:SetObeyStepOnDrag(true)
+    qualSlider:SetWidth(220)
+    
+    local qNames = {
+        [0] = "|cff9d9d9dPoor (Grey)|r",
+        [1] = "|cffffffffCommon (White)|r",
+        [2] = "|cff1eff00Uncommon (Green)|r",
+        [3] = "|cff0070ddRare (Blue)|r",
+        [4] = "|cffa335eeEpic (Purple)|r"
+    }
+
+    _G[qualSlider:GetName() .. "Low"]:SetText("")
+    _G[qualSlider:GetName() .. "High"]:SetText("")
+    _G[qualSlider:GetName() .. "Text"]:SetText("Max Quality: " .. qNames[4])
+    
+    -- Design anpassen
+    _G[qualSlider:GetName() .. "Text"]:SetTextColor(COLOR_GOLD.r, COLOR_GOLD.g, COLOR_GOLD.b)
+    
+    AddTooltip(qualSlider, "Peasant Limit", "The highest item quality you are allowed to equip.\nEquipping anything better costs a token!")
+
+    qualSlider:SetScript("OnValueChanged", function(self, value)
+        local val = math.floor(value)
+        _G[self:GetName() .. "Text"]:SetText("Max Quality: " .. (qNames[val] or "Unknown"))
+    end)
+
     -- NAVIGATION
     local btnBack = CreateFrame("Button", nil, step2, "GameMenuButtonTemplate")
     btnBack:SetPoint("BOTTOMLEFT", 30, 30)
@@ -228,6 +260,7 @@ function TC.ShowSetupWizard()
         TokenCoreDB.timerEnabled = cbTimer:GetChecked()
         TokenCoreDB.regenEnabled = cbRegen:GetChecked()
         TokenCoreDB.decayEnabled = cbDecay:GetChecked()
+        TokenCoreDB.peasantLimit = math.floor(qualSlider:GetValue())
         
         if TokenCoreDB.timerEnabled then
             TokenCoreDB.timerDuration = math.floor(timeSlider:GetValue()) * 60

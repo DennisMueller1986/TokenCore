@@ -22,5 +22,5 @@ Modules\Notifications.lua
 Modules\Minimap.lua
 
 # DEBUG
-#Modules\Debug.lua
-#Modules\Tests.lua
+Modules\Debug.lua
+Modules\Tests.lua
