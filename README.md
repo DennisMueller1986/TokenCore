@@ -2,8 +2,6 @@
 
 **TokenCore** transforms your World of Warcraft Classic journey into a roguelike survival challenge. Manage your "Life Tokens", beat timers, obey strict equipment rules, or suffer the consequences.
 
-![TokenCore HUD](https://via.placeholder.com/600x150?text=TokenCore+HUD+Preview) *(Du solltest hier später einen echten Screenshot einfügen!)*
-
 ## 💀 How it works
 You start with a set amount of **Life Tokens**.
 * **Die?** You lose a token.
