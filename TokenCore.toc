@@ -1,0 +1,26 @@
+## Interface: 11506
+## Title: TokenCore
+## Notes: Modularer Hardcore Modus
+## Author: Dennis Müller
+## Version: 0.2
+## SavedVariablesPerCharacter: TokenCoreDB
+
+# Core
+Core\Init.lua
+Core\EventHandler.lua
+
+# Data
+Data\AchievementsDB.lua
+
+# Modules
+Modules\Mechanics.lua
+Modules\Achievements.lua
+Modules\Timer.lua
+Modules\SetupWizard.lua
+Modules\HUD.lua
+Modules\Notifications.lua
+Modules\Minimap.lua
+
+# DEBUG
+#Modules\Debug.lua
+#Modules\Tests.lua
